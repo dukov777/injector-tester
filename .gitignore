@@ -30,3 +30,5 @@
 
 # Debug files
 *.dSYM/
+/MPLAB.X/build/PIC32MX220F032D/
+/MPLAB.X/dist/PIC32MX220F032D/

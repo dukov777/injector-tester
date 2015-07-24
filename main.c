@@ -92,8 +92,6 @@
 
 #define T2_TICK       		(SYS_FREQ/PB_DIV/PRESCALE/TOGGLES_PER_SEC_100us)
 
-#else
-    #error No hardware board defined, see "HardwareProfile.h"
 #endif
 
 
@@ -348,7 +346,11 @@ void ProcessIO(void)
             if (!USBHandleBusy(EP1INEvenHandle)) //Check if the endpoint has received any data from the host.
             {
                 //Re-arm the OUT endpoint for the next packet:IN_TO_HOST 1
-                EP1INEvenHandle = USBTransferOnePacket(1, IN_TO_HOST, (BYTE*) & EP1INEvenBuffer, 64);
+                EP1INEvenHandle = USBTransferOnePacket(
+                        1, 
+                        IN_TO_HOST, 
+                        (BYTE*)&EP1INEvenBuffer, 
+                        64);
                 EP1INEvenNeedsServicingNext = FALSE;
             }
         }
@@ -357,7 +359,11 @@ void ProcessIO(void)
             if (!USBHandleBusy(EP1INOddHandle)) //Check if the endpoint has received any data fromthe host.
             {
                 //Re-arm the OUT endpoint for the next packet:IN_TO_HOST 1
-                EP1INOddHandle = USBTransferOnePacket(1, IN_TO_HOST, (BYTE*) & EP1INOddBuffer, 64);
+                EP1INOddHandle = USBTransferOnePacket(
+                        1, 
+                        IN_TO_HOST, 
+                        (BYTE*)&EP1INOddBuffer, 
+                        64);
                 EP1INEvenNeedsServicingNext = TRUE;
             }
         }
@@ -423,16 +429,19 @@ void ADC_init(void)
     CloseADC10(); // ensure the ADC is off before setting the configuration
 
 //    AD1CHS = 0x07060000;
-    AD1CON1bits.FORM = 0;   // Integer 16-bit (DOUT = 0000 0000 0000 0000 0000 00dd dddd dddd)
-    AD1CON1bits.SSRC = 0x7; // 111 = Internal counter ends sampling and starts conversion (auto convert)
-    AD1CON1bits.ASAM = 1;   // Sampling begins immediately after last conversion completes
+    AD1CON1bits.FORM = 0;   // Integer 16-bit 
+                            //(DOUT = 0000 0000 0000 0000 0000 00dd dddd dddd)
+    AD1CON1bits.SSRC = 0x7; // 111 = Internal counter ends sampling and starts 
+                            //conversion (auto convert)
+    AD1CON1bits.ASAM = 1;   // Sampling begins immediately after last conversion 
+                            // completes
     
-    AD1CON2bits.VCFG = 0; //000 AVDD AVSS
+    AD1CON2bits.VCFG = 0;   //000 AVDD AVSS
     AD1CON2bits.OFFCAL = 0; // Disable Offset Calibration mode. The inputs to the SHA are controlled by AD1CHS or AD1CSSL
-    AD1CON2bits.CSCNA = 0; //Do not scan inputs
-    AD1CON2bits.SMPI = 7; //generate interupt on every 8 sample
-    AD1CON2bits.BUFM = 1; //1 = Buffer configured as two 8-word buffers
-    AD1CON2bits.ALTS = 0; //Always use MUX A input multiplexer settings
+    AD1CON2bits.CSCNA = 1;  // Scan inputs
+    AD1CON2bits.SMPI = 7;   // generate interupt on every 8 sample
+    AD1CON2bits.BUFM = 1;   // 1 = Buffer configured as two 8-word buffers
+    AD1CON2bits.ALTS = 0;   // Always use MUX A input multiplexer settings
 
     //2uS convertion time /40MHz PBdiv = 1
     // convertion time = Tad * 12 + SAMC * Tad
@@ -448,16 +457,17 @@ void ADC_init(void)
     AD1CHSbits.CH0SB = 0; // Channel 0 positive input is AN0
     //MUX A
     AD1CHSbits.CH0NA = 0;
-    AD1CHSbits.CH0SA = 6; //Set PICmx220.AN6 = PINGUINOx220.AN0 channel
         
     ANSELCbits.ANSC0 = 1; //Set PICmx220.AN6 = PINGUINOx220.AN0 to analog
     ANSELCbits.ANSC1 = 1; //Set PICmx220.AN7 = PINGUINOx220.AN1 to analog
     TRISCbits.TRISC0 = 1;
     TRISCbits.TRISC1 = 1;
 
-    AD1CSSLbits.w = 0; // ADC Input Scan Select Register
-//    AD1CSSLbits.CSSL6 = 1;
-//    AD1CSSLbits.CSSL7 = 1;
+    AD1CSSLbits.w = 0; // Select Register
+    AD1CSSLbits.CSSL2 = 1; // Input Scan ADC.A2 - injector 0 
+    AD1CSSLbits.CSSL3 = 1; // Input Scan ADC.A3 - injector 1 
+    AD1CSSLbits.CSSL6 = 1; // Input Scan ADC.A6 - injector 2
+    AD1CSSLbits.CSSL7 = 1; // Input Scan ADC.A7 - injector 3 
 
     IPC5bits.AD1IP = 6;    //AtoD1 Interrupt Priority
     IPC5bits.AD1IS = 3;    //AtoD1 Subpriority
@@ -467,7 +477,6 @@ void ADC_init(void)
     EnableADC10();
 }
 
-uint8_t samples[10];
 int32_t sampleCounter = 0;
 
 void __ISR(_ADC_VECTOR, ipl6) ADCInterruptHandler()
@@ -477,47 +486,29 @@ void __ISR(_ADC_VECTOR, ipl6) ADCInterruptHandler()
     if(AD1CON2bits.BUFS == 0)
     {
         //process lower buffer BUF0 - BUF7
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF0 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF1 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF2 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF3 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF4 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF5 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF6 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF7 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF8 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF9 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFA - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFB - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFC - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFD - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFE - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFF - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF0 - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF1 - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF2 - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF3 - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF4 - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF5 - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF6 - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF7 - 512;
     }
     else
     {
         //process higher buffer BUF8 - BUF15
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF0 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF1 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF2 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF3 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF4 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF5 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF6 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF7 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF8 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUF9 - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFA - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFB - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFC - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFD - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFE - 512;
-        EP1INEvenBuffer[sampleCounter] = ADC1BUFF - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF8 - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUF9 - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUFA - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUFB - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUFC - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUFD - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUFE - 512;
+        EP1INEvenBuffer[sampleCounter++] = ADC1BUFF - 512;
     }
 
-    if(++sampleCounter > 63){
-        sampleCounter = 0;
-    }
+    sampleCounter %= 64;
 }
 
 /********************************************************************
