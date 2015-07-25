@@ -333,7 +333,8 @@ void UserInit(void)
  *
  * Note:            None
  *****************************************************************************/
-volatile uint16_t bla;
+BOOL ready_to_send = FALSE;
+
 void ProcessIO(void)
 {
     //Blink the LEDs according to the USB device status.
@@ -341,30 +342,34 @@ void ProcessIO(void)
     BlinkUSBStatus();
 
     if(USBGetDeviceState() == CONFIGURED_STATE) {
-        if (EP1INEvenNeedsServicingNext == TRUE)
-        {
-            if (!USBHandleBusy(EP1INEvenHandle)) //Check if the endpoint has received any data from the host.
+        if(ready_to_send){
+            if (EP1INEvenNeedsServicingNext == TRUE)
             {
-                //Re-arm the OUT endpoint for the next packet:IN_TO_HOST 1
-                EP1INEvenHandle = USBTransferOnePacket(
-                        1, 
-                        IN_TO_HOST, 
-                        (BYTE*)&EP1INEvenBuffer, 
-                        64);
-                EP1INEvenNeedsServicingNext = FALSE;
+                if (!USBHandleBusy(EP1INEvenHandle)) //Check if the endpoint has received any data from the host.
+                {
+                    ready_to_send = FALSE;
+                    //Re-arm the OUT endpoint for the next packet:IN_TO_HOST 1
+                    EP1INEvenHandle = USBTransferOnePacket(
+                            1, 
+                            IN_TO_HOST, 
+                            (BYTE*)&EP1INEvenBuffer, 
+                            64);
+//                    EP1INEvenNeedsServicingNext = FALSE;
+                }
             }
-        }
-        else //else EP1OUTOdd needs servicing next
-        {
-            if (!USBHandleBusy(EP1INOddHandle)) //Check if the endpoint has received any data fromthe host.
+            else //else EP1OUTOdd needs servicing next
             {
-                //Re-arm the OUT endpoint for the next packet:IN_TO_HOST 1
-                EP1INOddHandle = USBTransferOnePacket(
-                        1, 
-                        IN_TO_HOST, 
-                        (BYTE*)&EP1INOddBuffer, 
-                        64);
-                EP1INEvenNeedsServicingNext = TRUE;
+                if (!USBHandleBusy(EP1INOddHandle)) //Check if the endpoint has received any data fromthe host.
+                {
+                    ready_to_send = FALSE;
+                    //Re-arm the OUT endpoint for the next packet:IN_TO_HOST 1
+                    EP1INOddHandle = USBTransferOnePacket(
+                            1, 
+                            IN_TO_HOST, 
+                            (BYTE*)&EP1INOddBuffer, 
+                            64);
+//                    EP1INEvenNeedsServicingNext = TRUE;
+                }
             }
         }
     }
@@ -446,8 +451,8 @@ void ADC_init(void)
     //2uS convertion time /40MHz PBdiv = 1
     // convertion time = Tad * 12 + SAMC * Tad
     AD1CON3bits.ADRC = 0; //PB clock source 40MHz
-    AD1CON3bits.ADCS = 100; //100ns Tad; Tad = TPB * 2 * (ADCS + 1)
-    AD1CON3bits.SAMC = 16; //sample = 8*Tad
+    AD1CON3bits.ADCS = 4; //100ns Tad; Tad = TPB * 2 * (ADCS + 1)
+    AD1CON3bits.SAMC = 3; //sample = 8*Tad
 //    AD1CON3bits.ADRC = 1; //PB clock source 40MHz
 //    AD1CON3bits.ADCS = 0; //100ns Tad; Tad = TPB * 2 * (ADCS + 1)
 //    AD1CON3bits.SAMC = 16; //sample = 8*Tad
@@ -460,8 +465,12 @@ void ADC_init(void)
         
     ANSELCbits.ANSC0 = 1; //Set PICmx220.AN6 = PINGUINOx220.AN0 to analog
     ANSELCbits.ANSC1 = 1; //Set PICmx220.AN7 = PINGUINOx220.AN1 to analog
+    ANSELBbits.ANSB0 = 1; //Set PICmx220.AN6 = PINGUINOx220.AN0 to analog
+    ANSELBbits.ANSB1 = 1; //Set PICmx220.AN7 = PINGUINOx220.AN1 to analog
     TRISCbits.TRISC0 = 1;
     TRISCbits.TRISC1 = 1;
+    TRISBbits.TRISB0 = 1;
+    TRISBbits.TRISB1 = 1;
 
     AD1CSSLbits.w = 0; // Select Register
     AD1CSSLbits.CSSL2 = 1; // Input Scan ADC.A2 - injector 0 
@@ -478,37 +487,52 @@ void ADC_init(void)
 }
 
 int32_t sampleCounter = 0;
+uint32_t packet_counter = 0;
+USB_VOLATILE BYTE *current_buffer = EP1INEvenBuffer;
 
 void __ISR(_ADC_VECTOR, ipl6) ADCInterruptHandler()
 {
     IFS0bits.AD1IF = 0;		//Clear irq flag
 
-    if(AD1CON2bits.BUFS == 0)
+    if(AD1CON2bits.BUFS == 1)
     {
         //process lower buffer BUF0 - BUF7
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF0 - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF1 - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF2 - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF3 - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF4 - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF5 - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF6 - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF7 - 512;
+        current_buffer[sampleCounter++] = ADC1BUF0 - 512;
+        current_buffer[sampleCounter++] = ADC1BUF1 - 512;
+        current_buffer[sampleCounter++] = ADC1BUF2 - 512;
+        current_buffer[sampleCounter++] = ADC1BUF3 - 512;
+        current_buffer[sampleCounter++] = ADC1BUF4 - 512;
+        current_buffer[sampleCounter++] = ADC1BUF5 - 512;
+        current_buffer[sampleCounter++] = ADC1BUF6 - 512;
+        current_buffer[sampleCounter++] = ADC1BUF7 - 512;
     }
     else
     {
         //process higher buffer BUF8 - BUF15
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF8 - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUF9 - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUFA - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUFB - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUFC - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUFD - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUFE - 512;
-        EP1INEvenBuffer[sampleCounter++] = ADC1BUFF - 512;
+        current_buffer[sampleCounter++] = ADC1BUF8 - 512;
+        current_buffer[sampleCounter++] = ADC1BUF9 - 512;
+        current_buffer[sampleCounter++] = ADC1BUFA - 512;
+        current_buffer[sampleCounter++] = ADC1BUFB - 512;
+        current_buffer[sampleCounter++] = ADC1BUFC - 512;
+        current_buffer[sampleCounter++] = ADC1BUFD - 512;
+        current_buffer[sampleCounter++] = ADC1BUFE - 512;
+        current_buffer[sampleCounter++] = ADC1BUFF - 512;
     }
 
-    sampleCounter %= 64;
+    if(sampleCounter >= 64){
+        sampleCounter = 8;
+        ready_to_send = TRUE;
+        ((uint32_t*)current_buffer)[0] = packet_counter++;
+        ((uint32_t*)current_buffer)[1] = ((uint32_t*)current_buffer)[0];
+        
+        if(current_buffer == EP1INEvenBuffer){
+            EP1INEvenNeedsServicingNext = TRUE;
+            current_buffer = EP1INOddBuffer;
+        }else{
+            EP1INEvenNeedsServicingNext = FALSE;
+            current_buffer = EP1INEvenBuffer;
+        }
+    }
 }
 
 /********************************************************************
