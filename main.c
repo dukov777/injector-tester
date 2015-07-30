@@ -60,10 +60,12 @@
 /** CONFIGURATION **************************************************/
 #if defined(PIC32MX220F032D_INJECTOR)
     #pragma config UPLLEN   = ON        // USB PLL Enabled
+    // Set main clock to 40MHz
     #pragma config FPLLMUL  = MUL_20        // PLL Multiplier
     #pragma config UPLLIDIV = DIV_2         // USB PLL Input Divider
     #pragma config FPLLIDIV = DIV_2         // PLL Input Divider
     #pragma config FPLLODIV = DIV_2         // PLL Output Divider
+    // Set peripheral clock to 40MHz
     #pragma config FPBDIV   = DIV_1         // Peripheral Clock divisor
     #pragma config FWDTEN   = OFF           // Watchdog Timer
     #pragma config WDTPS    = PS1           // Watchdog Timer Postscale
@@ -82,15 +84,14 @@
     #pragma config FUSBIDIO = OFF      // ICE/ICD Comm Channel Select
     #pragma config FVBUSONIO = OFF      // ICE/ICD Comm Channel Select
 
-#define SYS_FREQ (40000000L)
-#define PB_DIV         		1
-#define PRESCALE       		8
-#define TOGGLES_PER_SEC_1ms	2000
-#define TOGGLES_PER_SEC_100us	20000
+    #define SYS_FREQ (40000000L)
+    #define PB_DIV         		1
+    #define PRESCALE       		8
+    #define TOGGLES_PER_SEC_1ms	2000
+    #define TOGGLES_PER_SEC_100us	20000
 
-#define T1_TICK       		(SYS_FREQ/PB_DIV/PRESCALE/TOGGLES_PER_SEC_1ms)
-
-#define T2_TICK       		(SYS_FREQ/PB_DIV/PRESCALE/TOGGLES_PER_SEC_100us)
+    #define T1_TICK       		(SYS_FREQ/PB_DIV/PRESCALE/TOGGLES_PER_SEC_1ms)
+    #define T2_TICK       		(SYS_FREQ/PB_DIV/PRESCALE/TOGGLES_PER_SEC_100us)
 
 #endif
 
@@ -434,8 +435,8 @@ void ADC_init(void)
     CloseADC10(); // ensure the ADC is off before setting the configuration
 
 //    AD1CHS = 0x07060000;
-    AD1CON1bits.FORM = 0;   // Integer 16-bit 
-                            //(DOUT = 0000 0000 0000 0000 0000 00dd dddd dddd)
+    AD1CON1bits.FORM = 2;   // Integer 16-bit 
+                            //(DOUT = 0000 0000 0000 0000 dddd dddd dd00 0000)
     AD1CON1bits.SSRC = 0x7; // 111 = Internal counter ends sampling and starts 
                             //conversion (auto convert)
     AD1CON1bits.ASAM = 1;   // Sampling begins immediately after last conversion 
@@ -448,14 +449,12 @@ void ADC_init(void)
     AD1CON2bits.BUFM = 1;   // 1 = Buffer configured as two 8-word buffers
     AD1CON2bits.ALTS = 0;   // Always use MUX A input multiplexer settings
 
-    //2uS convertion time /40MHz PBdiv = 1
-    // convertion time = Tad * 12 + SAMC * Tad
-    AD1CON3bits.ADRC = 0; //PB clock source 40MHz
-    AD1CON3bits.ADCS = 4; //100ns Tad; Tad = TPB * 2 * (ADCS + 1)
-    AD1CON3bits.SAMC = 3; //sample = 8*Tad
-//    AD1CON3bits.ADRC = 1; //PB clock source 40MHz
-//    AD1CON3bits.ADCS = 0; //100ns Tad; Tad = TPB * 2 * (ADCS + 1)
-//    AD1CON3bits.SAMC = 16; //sample = 8*Tad
+    //25uS convertion time 
+    //PB = 40MHz
+    // Time per sample = Tad * 12 + SAMC * Tad = 12uS + 13uS = 25uS
+    AD1CON3bits.ADRC = 0; //PB clock source 40MHz => 25nS
+    AD1CON3bits.ADCS = 19; //Tad = TPB * 2 * (ADCS + 1) = 25ns*2*(19+1) = 1000nS 
+    AD1CON3bits.SAMC = 13; //sample = 13*Tad = 13uS
     
     //MUX B
     AD1CHSbits.CH0NB = 0; // 0 = Channel 0 negative input is VR-
@@ -497,26 +496,26 @@ void __ISR(_ADC_VECTOR, ipl6) ADCInterruptHandler()
     if(AD1CON2bits.BUFS == 1)
     {
         //process lower buffer BUF0 - BUF7
-        current_buffer[sampleCounter++] = ADC1BUF0 - 512;
-        current_buffer[sampleCounter++] = ADC1BUF1 - 512;
-        current_buffer[sampleCounter++] = ADC1BUF2 - 512;
-        current_buffer[sampleCounter++] = ADC1BUF3 - 512;
-        current_buffer[sampleCounter++] = ADC1BUF4 - 512;
-        current_buffer[sampleCounter++] = ADC1BUF5 - 512;
-        current_buffer[sampleCounter++] = ADC1BUF6 - 512;
-        current_buffer[sampleCounter++] = ADC1BUF7 - 512;
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF0)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF1)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF2)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF3)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF4)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF5)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF6)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF7)[1];
     }
     else
     {
         //process higher buffer BUF8 - BUF15
-        current_buffer[sampleCounter++] = ADC1BUF8 - 512;
-        current_buffer[sampleCounter++] = ADC1BUF9 - 512;
-        current_buffer[sampleCounter++] = ADC1BUFA - 512;
-        current_buffer[sampleCounter++] = ADC1BUFB - 512;
-        current_buffer[sampleCounter++] = ADC1BUFC - 512;
-        current_buffer[sampleCounter++] = ADC1BUFD - 512;
-        current_buffer[sampleCounter++] = ADC1BUFE - 512;
-        current_buffer[sampleCounter++] = ADC1BUFF - 512;
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF8)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUF9)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUFA)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUFB)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUFC)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUFD)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUFE)[1];
+        current_buffer[sampleCounter++] = ((BYTE*)&ADC1BUFF)[1];
     }
 
     if(sampleCounter >= 64){
