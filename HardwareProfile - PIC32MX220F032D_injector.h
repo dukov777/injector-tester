@@ -40,7 +40,7 @@
     //#define EXPLORER_16
 
     /** LED ************************************************************/
-    #define mInitAllLEDs()      LATA &= 0xFFC3; TRISA &= 0xFFC3;
+    #define mInitAllLEDs()      LATA &= 0xFFC3; TRISA &= 0xFFC3; TRISBbits.TRISB15=0;
     
     #define mLED_1              LATBbits.LATB15
     #define mLED_2              LATAbits.LATA10
@@ -51,7 +51,7 @@
     #define mGetLED_2()         mLED_2
     #define mGetLED_3()         mLED_3
     #define mGetLED_4()         mLED_4
-#ifdef enable_leds
+#if 0
     #define mLED_1_On()         mLED_1 = 1;
     #define mLED_2_On()         mLED_2 = 1;
     #define mLED_3_On()         mLED_3 = 1;
