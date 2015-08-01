@@ -90,7 +90,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC32</languageToolchain>
-        <languageToolchainVersion>1.22</languageToolchainVersion>
+        <languageToolchainVersion>1.40</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <compileType>
@@ -184,7 +184,7 @@
         <property key="enable-unroll-loops" value="false"/>
         <property key="exclude-floating-point" value="false"/>
         <property key="extra-include-directories"
-                  value="..\..\..\..\..\Program Files (x86)\Microchip\xc32\v1.22\pic32mx\include;..\;..\..\..\..\Microchip\Include;..\..\..\..\..\Program Files (x86)\Microchip\xc32\v1.22\pic32mx\include\peripheral"/>
+                  value="Z:\Program Files\Microchip\xc32\v1.40\pic32mx\include;..\;..\..\..\..\Microchip\Include;Z:\Program Files\Microchip\xc32\v1.40\pic32mx\include\peripheral"/>
         <property key="generate-16-bit-code" value="false"/>
         <property key="generate-micro-compressed-code" value="false"/>
         <property key="isolate-each-function" value="false"/>

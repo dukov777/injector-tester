@@ -15,23 +15,23 @@
 # $ makeMP_CC="/opt/microchip/mplabc30/v3.30c/bin/pic30-gcc" ...  
 #
 SHELL=cmd.exe
-PATH_TO_IDE_BIN=C:/Program Files (x86)/Microchip/MPLABX/v3.05/mplab_ide/mplab_ide/modules/../../bin/
+PATH_TO_IDE_BIN=C:/Program Files/Microchip/MPLABX/v3.05/mplab_ide/mplab_ide/modules/../../bin/
 # Adding MPLAB X bin directory to path.
-PATH:=C:/Program Files (x86)/Microchip/MPLABX/v3.05/mplab_ide/mplab_ide/modules/../../bin/:$(PATH)
+PATH:=C:/Program Files/Microchip/MPLABX/v3.05/mplab_ide/mplab_ide/modules/../../bin/:$(PATH)
 # Path to java used to run MPLAB X when this makefile was created
-MP_JAVA_PATH="C:\Program Files (x86)\Microchip\MPLABX\v3.05\sys\java\jre1.7.0_67/bin/"
+MP_JAVA_PATH="C:\Program Files\Microchip\MPLABX\v3.05\sys\java\jre1.7.0_67/bin/"
 OS_CURRENT="$(shell uname -s)"
-MP_CC="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN\xc32-gcc.exe"
-MP_CPPC="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN\xc32-g++.exe"
+MP_CC="Z:\Program Files\Microchip\xc32\v1.40\bin\xc32-gcc.exe"
+MP_CPPC="Z:\Program Files\Microchip\xc32\v1.40\bin\xc32-g++.exe"
 # MP_BC is not defined
-MP_AS="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN\xc32-as.exe"
-MP_LD="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN\xc32-ld.exe"
-MP_AR="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN\xc32-ar.exe"
-DEP_GEN=${MP_JAVA_PATH}java -jar "C:/Program Files (x86)/Microchip/MPLABX/v3.05/mplab_ide/mplab_ide/modules/../../bin/extractobjectdependencies.jar"
-MP_CC_DIR="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN"
-MP_CPPC_DIR="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN"
+MP_AS="Z:\Program Files\Microchip\xc32\v1.40\bin\xc32-as.exe"
+MP_LD="Z:\Program Files\Microchip\xc32\v1.40\bin\xc32-ld.exe"
+MP_AR="Z:\Program Files\Microchip\xc32\v1.40\bin\xc32-ar.exe"
+DEP_GEN=${MP_JAVA_PATH}java -jar "C:/Program Files/Microchip/MPLABX/v3.05/mplab_ide/mplab_ide/modules/../../bin/extractobjectdependencies.jar"
+MP_CC_DIR="Z:\Program Files\Microchip\xc32\v1.40\bin"
+MP_CPPC_DIR="Z:\Program Files\Microchip\xc32\v1.40\bin"
 # MP_BC_DIR is not defined
-MP_AS_DIR="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN"
-MP_LD_DIR="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN"
-MP_AR_DIR="C:\PROGRAM FILES (X86)\MICROCHIP\XC32\V1.22\BIN"
+MP_AS_DIR="Z:\Program Files\Microchip\xc32\v1.40\bin"
+MP_LD_DIR="Z:\Program Files\Microchip\xc32\v1.40\bin"
+MP_AR_DIR="Z:\Program Files\Microchip\xc32\v1.40\bin"
 # MP_BC_DIR is not defined
