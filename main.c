@@ -449,12 +449,12 @@ void ADC_init(void)
     AD1CON2bits.BUFM = 1;   // 1 = Buffer configured as two 8-word buffers
     AD1CON2bits.ALTS = 0;   // Always use MUX A input multiplexer settings
 
-    //25uS convertion time 
-    //PB = 40MHz
-    // Time per sample = Tad * 12 + SAMC * Tad = 12uS + 13uS = 25uS
+    // 5uS convertion time 
+    // PB = 40MHz
+    // Time per sample = Tad * 12 + SAMC * Tad = 2.4uS + 2.6uS = 5uS
     AD1CON3bits.ADRC = 0; //PB clock source 40MHz => 25nS
-    AD1CON3bits.ADCS = 19; //Tad = TPB * 2 * (ADCS + 1) = 25ns*2*(19+1) = 1000nS 
-    AD1CON3bits.SAMC = 13; //sample = 13*Tad = 13uS
+    AD1CON3bits.ADCS = 3; //Tad = TPB * 2 * (ADCS + 1) = 25ns*2*(3+1) = 200nS 
+    AD1CON3bits.SAMC = 13; //sample = 13*Tad = 13*200ns = 2.6uS
     
     //MUX B
     AD1CHSbits.CH0NB = 0; // 0 = Channel 0 negative input is VR-
